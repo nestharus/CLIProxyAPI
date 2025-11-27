@@ -61,7 +61,7 @@ func (e *GeminiCLIExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth
 	defer reporter.trackFailure(ctx, &err)
 
 	// Inject reasoning_effort for Gemini 3 model variants
-	payload := injectGemini3ReasoningEffort(req.Model, req.Payload)
+	payload := injectGemini3ReasoningEffort(req.Model, req.Payload, req.Metadata)
 
 	from := opts.SourceFormat
 	to := sdktranslator.FromString("gemini-cli")
@@ -206,7 +206,7 @@ func (e *GeminiCLIExecutor) ExecuteStream(ctx context.Context, auth *cliproxyaut
 	defer reporter.trackFailure(ctx, &err)
 
 	// Inject reasoning_effort for Gemini 3 model variants
-	payload := injectGemini3ReasoningEffort(req.Model, req.Payload)
+	payload := injectGemini3ReasoningEffort(req.Model, req.Payload, req.Metadata)
 
 	from := opts.SourceFormat
 	to := sdktranslator.FromString("gemini-cli")
@@ -780,11 +780,17 @@ func newGeminiStatusErr(statusCode int, body []byte) statusErr {
 }
 
 // injectGemini3ReasoningEffort injects reasoning_effort for Gemini 3 model variants.
-// Models ending with "-low" or "-high" get the corresponding reasoning_effort injected.
-func injectGemini3ReasoningEffort(modelName string, body []byte) []byte {
+// Checks metadata first (from normalized model), then falls back to model name suffix.
+func injectGemini3ReasoningEffort(modelName string, body []byte, metadata map[string]any) []byte {
 	if gjson.GetBytes(body, "reasoning_effort").Exists() {
 		return body
 	}
+	// First check metadata (set during model normalization)
+	if effort, ok := util.Gemini3ReasoningEffortFromMetadata(metadata); ok {
+		body, _ = sjson.SetBytes(body, "reasoning_effort", effort)
+		return body
+	}
+	// Fall back to model name suffix check
 	switch {
 	case strings.HasSuffix(modelName, "-low"):
 		body, _ = sjson.SetBytes(body, "reasoning_effort", "low")

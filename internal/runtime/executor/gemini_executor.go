@@ -76,7 +76,7 @@ func (e *GeminiExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, r
 	defer reporter.trackFailure(ctx, &err)
 
 	// Inject reasoning_effort for Gemini 3 model variants
-	payload := injectGemini3ReasoningEffort(req.Model, req.Payload)
+	payload := injectGemini3ReasoningEffort(req.Model, req.Payload, req.Metadata)
 
 	// Official Gemini API via API key or OAuth bearer
 	from := opts.SourceFormat
@@ -175,7 +175,7 @@ func (e *GeminiExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 	defer reporter.trackFailure(ctx, &err)
 
 	// Inject reasoning_effort for Gemini 3 model variants
-	payload := injectGemini3ReasoningEffort(req.Model, req.Payload)
+	payload := injectGemini3ReasoningEffort(req.Model, req.Payload, req.Metadata)
 
 	from := opts.SourceFormat
 	to := sdktranslator.FromString("gemini")

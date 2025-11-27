@@ -124,7 +124,7 @@ func (fh *FallbackHandler) WrapHandler(handler gin.HandlerFunc) gin.HandlerFunc 
 			return
 		}
 
-		// Normalize model (handles Gemini thinking suffixes)
+		// Normalize model (handles Gemini thinking and reasoning effort suffixes)
 		normalizedModel, _ := util.NormalizeGeminiThinkingModel(modelName)
 
 		// Check if we have providers for this model
